@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DisputeBot - 反驳生成器</title>
+    <style>
+        /* ============================================================
+           CSS 变量 - 统一样式
+           ============================================================ */
+        :root {
+            --primary-color: #4a90d9;
+            --primary-hover: #357abd;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --text-secondary: #666;
+            --border-color: #ddd;
+            --radius: 8px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* ============================================================
+           基础样式
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
+           标题区域
+           ============================================================ */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+           表单卡片
+           ============================================================ */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: "";
+            width: 4px;
+            height: 18px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        /* ============================================================
+           输入框组
+           ============================================================ */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-color);
+        }
+
+        .form-group label .optional {
+            font-weight: normal;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* 输入框的 placeholder 样式 */
+        input::placeholder,
+        textarea::placeholder {
+            color: #aaa;
+        }
+
+        /* ============================================================
+           滑块样式
+           ============================================================ */
+        .slider-group {
+            margin-bottom: 16px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .slider-label {
+            font-weight: 500;
+        }
+
+        .slider-value {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ============================================================
+           双列布局（滑块区域）
+           ============================================================ */
+        .slider-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .slider-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ============================================================
+           按钮样式
+           ============================================================ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* ============================================================
+           结果显示区域
+           ============================================================ */
+        .result-card {
+            display: none;  /* 初始隐藏 */
+        }
+
+        .result-card.show {
+            display: block;
+        }
+
+        .result-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .result-content {
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            min-height: 120px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.8;
+        }
+
+        .result-footer {
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+           加载状态
+           ============================================================ */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #ddd;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============================================================
+           错误提示
+           ============================================================ */
+        .error {
+            display: none;
+            background: #fff3f3;
+            border: 1px solid #ffcccc;
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            color: #d63031;
+            margin-top: 12px;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        /* ============================================================
+           页脚
+           ============================================================ */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 标题 -->
+        <header class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>DisputeBot</h1>
+                    <p>输入喷子言论，AI 生成有力反驳</p>
+                </div>
+                <div>
+                    <button type="button" id="langToggle" style="padding: 6px 12px; cursor: pointer; border-radius: 4px; border: 1px solid #ddd; background: white;">EN / 中文</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 输入表单 -->
+        <form id="form" class="card">
+            <div class="card-title">反驳内容</div>
+
+            <!-- API Key -->
+            <div class="form-group">
+                <label for="apiKey">API Key <span class="optional">留空使用.env配置的API Key</span></label>
+                <input
+                    type="password"
+                    id="apiKey"
+                    placeholder="填入 MiniMax API Key"
+                >
+            </div>
+
+            <!-- 背景场景 -->
+            <div class="form-group">
+                <label for="scene">背景场景</label>
+                <textarea
+                    id="scene"
+                    placeholder="如：足球 - 皇马球员辱华事件，皇马球迷辩护，巴萨球迷反驳"
+                    rows="2"
+                ></textarea>
+            </div>
+
+            <!-- 我的立场 & 对方定位 -->
+            <div class="slider-row">
+                <div class="form-group">
+                    <label for="myStance">我的立场</label>
+                    <input
+                        type="text"
+                        id="myStance"
+                        placeholder="如：巴萨球迷"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="opponentProfile">对方定位</label>
+                    <input
+                        type="text"
+                        id="opponentProfile"
+                        placeholder="如：皇马球迷结晶"
+                    >
+                </div>
+            </div>
+
+            <!-- 激烈程度 & 随机性 -->
+            <div class="slider-row">
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">激烈程度</span>
+                        <span class="slider-value" id="aggressionValue">3</span>
+                    </div>
+                    <input
+                        type="range"
+                        id="aggression"
+                        min="1"
+                        max="5"
+                        value="3"
+                    >
+                    <div class="slider-hint">1温和讲理，2稍带情绪，3阴阳怪气，4讽刺挖苦，5直接开喷</div>
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">随机性</span>
+                        <span class="slider-value" id="temperatureValue">0.8</span>
+                    </div>
+                    <input
+                        type="range"
+                        id="temperature"
+                        min="0"
+                        max="2"
+                        step="0.1"
+                        value="0.8"
+                    >
+                    <div class="slider-hint">0-0.3稳定，0.4-0.7平衡，0.8-2.0创意</div>
+                </div>
+            </div>
+
+            <!-- 目标字数 & 模型选择 -->
+            <div class="slider-row">
+                <div class="form-group">
+                    <label for="targetLength">目标字数 <span class="optional">(0=不限制)</span></label>
+                    <input
+                        type="text"
+                        id="targetLength"
+                        placeholder="50"
+                        value="50"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="provider">提供商</label>
+                    <select id="provider">
+                        <option value="minimax">MiniMax</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modelVariant">具体模型 <span class="optional">(留空使用默认)</span></label>
+                    <input
+                        type="text"
+                        id="modelVariant"
+                        placeholder="MiniMax-M2.7 (留空则使用默认)"
+                    >
+                </div>
+            </div>
+
+            <!-- 自定义中转站设置（默认隐藏） -->
+            <div class="card" id="customSettings" style="display: none; margin-top: 16px;">
+                <div class="card-title">自定义中转站设置</div>
+                <div class="form-group">
+                    <label for="baseUrl">API 地址 <span class="optional">(必填，只需填到 /v1，会自动加上 /chat/completions)</span></label>
+                    <input
+                        type="text"
+                        id="baseUrl"
+                        placeholder="https://openrouter.ai/api/v1"
+                    >
+                </div>
+            </div>
+
+            <!-- 对方的话 -->
+            <div class="form-group">
+                <label for="message">对方的话</label>
+                <textarea
+                    id="message"
+                    placeholder="皇马球员辱华怎么了，那是他的言论自由，你们中国人就是太玻璃心"
+                    rows="3"
+                ></textarea>
+            </div>
+
+            <!-- 提交按钮 -->
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+                生成反驳
+            </button>
+        </form>
+
+        <!-- 加载状态 -->
+        <div class="card loading" id="loading">
+            <div class="loading-spinner"></div>
+            <div>AI 正在思考中...</div>
+        </div>
+
+        <!-- 错误提示 -->
+        <div class="error" id="error"></div>
+
+        <!-- 结果显示 -->
+        <div class="card result-card" id="resultCard">
+            <div class="card-title">生成的反驳</div>
+            <div class="result-content" id="resultContent"></div>
+            <div class="result-footer">
+                <span class="result-meta" id="resultMeta"></span>
+                <button type="button" class="btn btn-primary" id="retryBtn" style="width: auto; padding: 8px 16px;">
+                    重新生成
+                </button>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>DisputeBot v1.0 | <a href="/docs">API 文档</a></p>
+        </footer>
+    </div>
+
+    <script>
+        /* ============================================================
+           JavaScript - 交互逻辑
+           ============================================================ */
+
+        // DOM 元素引用
+        const form = document.getElementById('form');
+        const sceneInput = document.getElementById('scene');
+        const myStanceInput = document.getElementById('myStance');
+        const opponentProfileInput = document.getElementById('opponentProfile');
+        const aggressionInput = document.getElementById('aggression');
+        const aggressionValue = document.getElementById('aggressionValue');
+        const temperatureInput = document.getElementById('temperature');
+        const temperatureValue = document.getElementById('temperatureValue');
+        const targetLengthInput = document.getElementById('targetLength');
+        const providerSelect = document.getElementById('provider');
+        const modelVariantSelect = document.getElementById('modelVariant');
+        const apiKeyInput = document.getElementById('apiKey');
+        const baseUrlInput = document.getElementById('baseUrl');
+        const customSettingsDiv = document.getElementById('customSettings');
+        const messageInput = document.getElementById('message');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingDiv = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const resultCard = document.getElementById('resultCard');
+        const resultContent = document.getElementById('resultContent');
+        const resultMeta = document.getElementById('resultMeta');
+        const retryBtn = document.getElementById('retryBtn');
+
+        // ============================================================
+        // 第1部分: 滑块值同步更新
+        // ============================================================
+        // 当用户拖动滑块时，下面的数字同步更新
+        // ============================================================
+
+        // 各提供商的默认模型
+        const defaultModels = {
+            "minimax": "MiniMax-M2.7",
+            "deepseek": "deepseek-v4-flash",
+            "kimi": "kimi-k2.5",
+            "zhipu": "glm-5.1",
+            "custom": "gpt-4o-mini"
+        };
+        aggressionInput.addEventListener('input', () => {
+            aggressionValue.textContent = aggressionInput.value;
+        });
+
+        temperatureInput.addEventListener('input', () => {
+            temperatureValue.textContent = parseFloat(temperatureInput.value).toFixed(1);
+        });
+
+        // 切换供应商时更新模型 variant 的 placeholder 和显示自定义设置
+        providerSelect.addEventListener('change', () => {
+            const selectedProvider = providerSelect.value;
+
+            // 更新 placeholder
+            const defaultModel = defaultModels[selectedProvider] || "";
+            if (selectedProvider === "custom") {
+                modelVariantSelect.placeholder = "输入模型名称如 gpt-4o-mini";
+            } else {
+                modelVariantSelect.placeholder = `${defaultModel} (留空则使用默认)`;
+            }
+
+            // 显示/隐藏自定义中转站设置
+            if (selectedProvider === "custom") {
+                customSettingsDiv.style.display = 'block';
+            } else {
+                customSettingsDiv.style.display = 'none';
+            }
+        });
+
+        // ============================================================
+        // 第2部分: 表单提交
+        // ============================================================
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();  // 阻止表单默认提交
+
+            // 收集表单数据
+            const data = {
+                scene: sceneInput.value,
+                my_stance: myStanceInput.value,
+                opponent_profile: opponentProfileInput.value,
+                aggression: parseInt(aggressionInput.value),
+                temperature: parseFloat(temperatureInput.value),
+                target_length: parseInt(targetLengthInput.value) || 0,
+                model: providerSelect.value,
+                model_variant: modelVariantSelect.value || null,
+                message: messageInput.value
+            };
+
+            // 如果用户填了 API Key，加入请求
+            if (apiKeyInput.value.trim()) {
+                data.api_key = apiKeyInput.value.trim();
+            }
+
+            // 如果使用自定义中转站，加入 base_url
+            if (providerSelect.value === "custom" && baseUrlInput.value.trim()) {
+                data.base_url = baseUrlInput.value.trim();
+            }
+
+            // 调用 API
+            await callGenerateAPI(data);
+        });
+
+        // ============================================================
+        // 第3部分: 重新生成按钮
+        // ============================================================
+        retryBtn.addEventListener('click', async () => {
+            // 重新提交表单
+            form.dispatchEvent(new Event('submit'));
+        });
+
+        // ============================================================
+        // 第4部分: API 调用
+        // ============================================================
+        async function callGenerateAPI(data) {
+            // 显示加载状态
+            showLoading(true);
+            hideError();
+            hideResult();
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 显示结果
+                    showResult(result.reply, data.model);
+                } else {
+                    // 显示错误
+                    showError(result.error || '生成失败');
+                }
+            } catch (error) {
+                showError('网络错误: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ============================================================
+        // 第5部分: UI 状态控制
+        // ============================================================
+        function showLoading(show) {
+            loadingDiv.classList.toggle('show', show);
+            submitBtn.disabled = show;
+            retryBtn.disabled = show;
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        function hideError() {
+            errorDiv.classList.remove('show');
+        }
+
+        function showResult(reply, model) {
+            resultContent.textContent = reply;
+            resultMeta.textContent = `使用模型: ${model}`;
+            resultCard.classList.add('show');
+        }
+
+        function hideResult() {
+            resultCard.classList.remove('show');
+        }
+
+        // ============================================================
+        // 第6部分: 加载模型列表
+        // ============================================================
+        async function loadModels() {
+            try {
+                // 加载提供商列表
+                const providersResponse = await fetch('/api/models');
+                const providersData = await providersResponse.json();
+
+                // 清空并填充提供商选项
+                providerSelect.innerHTML = '';
+                providersData.models.forEach(provider => {
+                    const option = document.createElement('option');
+                    option.value = provider.id;
+                    option.textContent = provider.name;
+                    providerSelect.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('加载模型列表失败:', error);
+            }
+        }
+
+        // 页面加载时获取模型列表
+        loadModels();
+
+        // ============================================================
+        // 第7部分: 中英文切换
+        // ============================================================
+        const translations = {
+            zh: {
+                title: "DisputeBot",
+                subtitle: "输入喷子言论，AI 生成有力反驳",
+                cardTitle: "反驳内容",
+                apiKeyLabel: "API Key",
+                apiKeyPlaceholder: "填入 MiniMax API Key",
+                apiKeyHint: "留空使用.env配置的API Key",
+                sceneLabel: "背景场景",
+                scenePlaceholder: "如：足球 - 皇马球员辱华事件，皇马球迷辩护，巴萨球迷反驳",
+                myStanceLabel: "我的立场",
+                myStancePlaceholder: "如：巴萨球迷",
+                opponentProfileLabel: "对方定位",
+                opponentProfilePlaceholder: "如：皇马球迷结晶",
+                aggressionLabel: "激烈程度",
+                aggressionHint: "1温和讲理，2稍带情绪，3阴阳怪气，4讽刺挖苦，5直接开喷",
+                temperatureLabel: "随机性",
+                temperatureHint: "0-0.3稳定，0.4-0.7平衡，0.8-2.0创意",
+                targetLengthLabel: "目标字数",
+                targetLengthHint: "0=不限制",
+                providerLabel: "提供商",
+                modelVariantLabel: "具体模型",
+                modelVariantHint: "留空使用默认",
+                customSettingsTitle: "自定义中转站设置",
+                baseUrlLabel: "API 地址",
+                baseUrlHint: "必填，只需填到 /v1，会自动加上 /chat/completions",
+                baseUrlPlaceholder: "https://openrouter.ai/api/v1",
+                messageLabel: "对方的话",
+                messagePlaceholder: "皇马球员辱华怎么了，那是他的言论自由，你们中国人就是太玻璃心",
+                submitBtn: "生成反驳",
+                loadingText: "AI 正在思考中...",
+                resultLabel: "生成的反驳",
+                resultMeta: "使用模型",
+                retryBtn: "重新生成",
+                footerText: "DisputeBot v1.0 | API 文档"
+            },
+            en: {
+                title: "DisputeBot",
+                subtitle: "Enter toxic remarks, AI generates powerful rebuttals",
+                cardTitle: "Rebuttal Content",
+                apiKeyLabel: "API Key",
+                apiKeyPlaceholder: "Enter your API Key",
+                apiKeyHint: "Leave blank to use .env config",
+                sceneLabel: "Background Scene",
+                scenePlaceholder: "e.g., Football - Real Madrid player's China controversy",
+                myStanceLabel: "My Stance",
+                myStancePlaceholder: "e.g., Barcelona fan",
+                opponentProfileLabel: "Opponent Profile",
+                opponentProfilePlaceholder: "e.g., Real Madrid fan",
+                aggressionLabel: "Aggression Level",
+                aggressionHint: "1-calm, 2-slight emotion, 3-sarcastic, 4-ironic, 5-attack",
+                temperatureLabel: "Randomness",
+                temperatureHint: "0-0.3 stable, 0.4-0.7 balanced, 0.8-2.0 creative",
+                targetLengthLabel: "Target Length",
+                targetLengthHint: "0=no limit",
+                providerLabel: "Provider",
+                modelVariantLabel: "Model Variant",
+                modelVariantHint: "Leave blank for default",
+                customSettingsTitle: "Custom Proxy Settings",
+                baseUrlLabel: "API Address",
+                baseUrlHint: "Required, just fill to /v1",
+                baseUrlPlaceholder: "https://openrouter.ai/api/v1",
+                messageLabel: "Opponent's Message",
+                messagePlaceholder: "Real Madrid player insulted China, that's his freedom of speech",
+                submitBtn: "Generate Rebuttal",
+                loadingText: "AI is thinking...",
+                resultLabel: "Generated Rebuttal",
+                resultMeta: "Using model",
+                retryBtn: "Retry",
+                footerText: "DisputeBot v1.0 | API Docs"
+            }
+        };
+
+        let currentLang = 'zh';
+
+        function switchLanguage() {
+            const t = translations[currentLang];
+
+            // 标题
+            document.querySelector('.header h1').textContent = t.title;
+            document.querySelector('.header p').textContent = t.subtitle;
+
+            // 反驳内容卡片标题
+            document.querySelector('.card-title').textContent = t.cardTitle;
+
+            // API Key
+            document.querySelector('label[for="apiKey"]').innerHTML = `${t.apiKeyLabel} <span class="optional">${t.apiKeyHint}</span>`;
+            document.getElementById('apiKey').placeholder = t.apiKeyPlaceholder;
+
+            // 背景场景
+            document.querySelector('label[for="scene"]').textContent = t.sceneLabel;
+            document.getElementById('scene').placeholder = t.scenePlaceholder;
+
+            // 我的立场
+            document.querySelector('label[for="myStance"]').textContent = t.myStanceLabel;
+            document.getElementById('myStance').placeholder = t.myStancePlaceholder;
+
+            // 对方定位
+            document.querySelector('label[for="opponentProfile"]').textContent = t.opponentProfileLabel;
+            document.getElementById('opponentProfile').placeholder = t.opponentProfilePlaceholder;
+
+            // 激烈程度
+            document.querySelector('.slider-group:first-of-type .slider-label').textContent = t.aggressionLabel;
+            document.querySelector('.slider-group:first-of-type .slider-hint').textContent = t.aggressionHint;
+
+            // 随机性
+            document.querySelector('.slider-group:last-of-type .slider-label').textContent = t.temperatureLabel;
+            document.querySelector('.slider-group:last-of-type .slider-hint').textContent = t.temperatureHint;
+
+            // 目标字数
+            document.querySelector('label[for="targetLength"]').innerHTML = `${t.targetLengthLabel} <span class="optional">(${t.targetLengthHint})</span>`;
+            document.getElementById('targetLength').placeholder = "50";
+
+            // 提供商
+            document.querySelector('label[for="provider"]').textContent = t.providerLabel;
+
+            // 具体模型
+            document.querySelector('label[for="modelVariant"]').innerHTML = `${t.modelVariantLabel} <span class="optional">(${t.modelVariantHint})</span>`;
+
+            // 自定义中转站
+            const customTitle = document.querySelector('#customSettings .card-title');
+            if (customTitle) customTitle.textContent = t.customSettingsTitle;
+            document.querySelector('label[for="baseUrl"]').innerHTML = `${t.baseUrlLabel} <span class="optional">${t.baseUrlHint}</span>`;
+            document.getElementById('baseUrl').placeholder = t.baseUrlPlaceholder;
+
+            // 对方的话
+            document.querySelector('label[for="message"]').textContent = t.messageLabel;
+            document.getElementById('message').placeholder = t.messagePlaceholder;
+
+            // 按钮
+            document.getElementById('submitBtn').textContent = t.submitBtn;
+            document.getElementById('retryBtn').textContent = t.retryBtn;
+
+            // 结果区域
+            const resultLabel = document.querySelector('#resultCard .card-title');
+            if (resultLabel) resultLabel.textContent = t.resultLabel;
+
+            // Footer
+            const footerLinks = document.querySelectorAll('.footer a');
+            footerLinks[0].textContent = 'API ' + t.footerText.split('|')[1].trim();
+
+            // 加载中文字
+            const loadingDivText = document.querySelector('#loading div:last-child');
+            if (loadingDivText) loadingDivText.textContent = t.loadingText;
+
+            // 切换语言
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+        }
+
+        // 绑定语言切换按钮
+        document.getElementById('langToggle').addEventListener('click', switchLanguage);
+    </script>
+</body>
+</html>
