@@ -1,3 +1,4 @@
+
 # DisputeBot - 反驳生成器
 
 输入喷子言论，AI 生成有力反驳。
@@ -5,6 +6,13 @@
 [English](#english) | 中文
 
 ---
+
+<img width="1156" height="913" alt="image" src="https://github.com/user-attachments/assets/1dccc423-95e5-4c57-90ba-f210983ef627" />
+
+
+<img width="1069" height="334" alt="image-2" src="https://github.com/user-attachments/assets/5a1f421b-0af1-4901-a2b9-8a8a3754c3cc" />
+
+
 
 ## 功能特性
 
