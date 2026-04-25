@@ -23,7 +23,7 @@
 
 ```bash
 # 方式1: Git克隆
-git clone <你的仓库地址>
+git clone https://github.com/ysqd1/DisputeBot.git
 
 # 方式2: 手动下载
 # 下载并解压到本地文件夹
